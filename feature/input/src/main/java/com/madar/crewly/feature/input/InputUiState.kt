@@ -35,9 +35,5 @@ sealed class UserFormEvent {
 enum class Gender(val displayName: String) {
     MALE("Male"),
     FEMALE("Female"),
-    OTHER("Other");
-
-    companion object {
-        val entries = listOf(MALE, FEMALE, OTHER)
-    }
+    OTHER("Other")
 }

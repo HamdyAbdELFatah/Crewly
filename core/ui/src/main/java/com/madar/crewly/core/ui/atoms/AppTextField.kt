@@ -19,7 +19,7 @@ import com.madar.crewly.core.common.UiText
 fun AppTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: UiText,
+    labelText: String,
     modifier: Modifier = Modifier,
     error: UiText? = null,
     maxLength: Int? = null,
@@ -27,9 +27,9 @@ fun AppTextField(
     imeAction: ImeAction = ImeAction.Next,
     enabled: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    singleLine: Boolean = true,
-    labelText: String = ""
+    singleLine: Boolean = true
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
@@ -41,7 +41,7 @@ fun AppTextField(
                 }
                 onValueChange(trimmedValue)
             },
-            label = { Text(labelText.ifEmpty { label.asString(androidx.compose.ui.platform.LocalContext.current) }) },
+            label = { Text(labelText) },
             isError = error != null,
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
@@ -56,7 +56,7 @@ fun AppTextField(
 
         if (error != null) {
             Text(
-                text = error.asString(androidx.compose.ui.platform.LocalContext.current),
+                text = error.asString(context),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 16.dp, top = 4.dp)

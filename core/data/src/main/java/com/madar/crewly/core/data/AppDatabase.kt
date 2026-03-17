@@ -3,6 +3,7 @@ package com.madar.crewly.core.data
 import android.content.Context
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import com.madar.crewly.core.common.AppConstants
 
 @androidx.room3.Database(
     entities = [UserEntity::class],
@@ -16,6 +17,6 @@ abstract class AppDatabase : RoomDatabase() {
 fun createAppDatabase(context: Context): AppDatabase {
     return Room.databaseBuilder<AppDatabase>(
         context,
-        "crewly_db"
+        AppConstants.DATABASE_NAME
     ).build()
 }

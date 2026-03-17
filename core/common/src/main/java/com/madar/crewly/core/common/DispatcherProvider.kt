@@ -9,10 +9,3 @@ interface DispatcherProvider {
     val default: CoroutineDispatcher
     val unconfined: CoroutineDispatcher
 }
-
-object DefaultDispatcherProvider : DispatcherProvider {
-    override val io: CoroutineDispatcher get() = Dispatchers.IO
-    override val main: CoroutineDispatcher get() = Dispatchers.Main
-    override val default: CoroutineDispatcher get() = Dispatchers.Default
-    override val unconfined: CoroutineDispatcher get() = Dispatchers.Unconfined
-}

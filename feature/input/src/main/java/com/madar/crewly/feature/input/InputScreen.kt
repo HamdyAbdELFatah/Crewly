@@ -78,7 +78,6 @@ fun InputScreen(
             AppTextField(
                 value = uiState.name,
                 onValueChange = { onEvent(UserFormEvent.NameChanged(it)) },
-                label = UiText.StringResource(R.string.name_label),
                 error = uiState.fieldErrors[Field.NAME],
                 maxLength = com.madar.crewly.core.common.AppConstants.NAME_MAX_LENGTH,
                 labelText = stringResource(R.string.name_label),
@@ -88,7 +87,6 @@ fun InputScreen(
             AppTextField(
                 value = uiState.age,
                 onValueChange = { onEvent(UserFormEvent.AgeChanged(it)) },
-                label = UiText.StringResource(R.string.age_label),
                 error = uiState.fieldErrors[Field.AGE],
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 labelText = stringResource(R.string.age_label),
@@ -98,7 +96,6 @@ fun InputScreen(
             AppTextField(
                 value = uiState.jobTitle,
                 onValueChange = { onEvent(UserFormEvent.JobChanged(it)) },
-                label = UiText.StringResource(R.string.job_label),
                 error = uiState.fieldErrors[Field.JOB_TITLE],
                 maxLength = com.madar.crewly.core.common.AppConstants.JOB_MAX_LENGTH,
                 labelText = stringResource(R.string.job_label),
