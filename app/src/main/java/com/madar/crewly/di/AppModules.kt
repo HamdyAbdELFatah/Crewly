@@ -5,13 +5,13 @@ import com.madar.crewly.core.common.Mapper
 import com.madar.crewly.core.data.AppDatabase
 import com.madar.crewly.core.data.User
 import com.madar.crewly.core.data.UserEntity
-import com.madar.crewly.core.data.UserRepository
 import com.madar.crewly.core.data.UserRepositoryImpl
 import com.madar.crewly.core.data.UserEntityToUserMapper
 import com.madar.crewly.core.data.UserToUserEntityMapper
 import com.madar.crewly.core.data.createAppDatabase
 import com.madar.crewly.core.domain.GetAllUsersUseCase
 import com.madar.crewly.core.domain.SaveUserUseCase
+import com.madar.crewly.core.domain.UserRepository
 import com.madar.crewly.feature.display.DisplayViewModel
 import com.madar.crewly.feature.input.InputViewModel
 import kotlinx.coroutines.CoroutineDispatcher

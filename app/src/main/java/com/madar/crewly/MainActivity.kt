@@ -56,7 +56,8 @@ fun MainScreen() {
                     InputScreen(
                         uiState = uiState,
                         onEvent = vm::onEvent,
-                        onNavigate = { navBackStack.add(UsersRoute) }
+                        onNavigate = { navBackStack.add(UsersRoute) },
+                        viewModel = vm
                     )
                 }
 
@@ -66,7 +67,8 @@ fun MainScreen() {
 
                     UsersScreen(
                         uiState = uiState,
-                        onBack = { navBackStack.removeLastOrNull() }
+                        onBack = { navBackStack.removeLastOrNull() },
+                        viewModel = vm
                     )
                 }
             }

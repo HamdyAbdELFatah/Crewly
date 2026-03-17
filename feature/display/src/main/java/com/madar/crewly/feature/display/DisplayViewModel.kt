@@ -8,13 +8,9 @@ import com.madar.crewly.core.common.DisplayUiEvent
 import com.madar.crewly.core.common.DisplayUiState
 import com.madar.crewly.core.common.UiText
 import com.madar.crewly.core.data.User
-import com.madar.crewly.core.data.UserRepository
+import com.madar.crewly.core.domain.UserRepository
 import com.madar.crewly.core.domain.GetAllUsersUseCase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class DisplayViewModel(
@@ -23,21 +19,15 @@ class DisplayViewModel(
     dispatchers: DispatcherProvider
 ) : BaseViewModel<DisplayUiState, DisplayUiEvent>(dispatchers) {
 
-    val users: StateFlow<List<User>> = getAllUsersUseCase()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
-
     init {
-        updateState {
-            copy(
-                contentState = ContentState.Loading
-            )
-        }
+        load()
+    }
 
+    override fun initialState() = DisplayUiState()
+
+    fun load() {
         viewModelScope.launch(dispatchers.io) {
+            updateState { copy(contentState = ContentState.Loading) }
             combine(
                 getAllUsersUseCase(),
                 userRepository.getUserCount()
@@ -47,6 +37,7 @@ class DisplayViewModel(
                 updateState {
                     copy(
                         userCount = count,
+                        isRefreshing = false,
                         contentState = when {
                             users.isEmpty() -> ContentState.Empty
                             else -> ContentState.Success(users)
@@ -57,10 +48,9 @@ class DisplayViewModel(
         }
     }
 
-    override fun initialState() = DisplayUiState()
-
-    fun load() {
-        updateState { copy(contentState = ContentState.Loading) }
+    fun refresh() {
+        updateState { copy(isRefreshing = true) }
+        load()
     }
 
     override fun handleError(message: UiText) {

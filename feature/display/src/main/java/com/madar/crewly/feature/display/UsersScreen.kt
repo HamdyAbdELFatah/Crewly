@@ -15,10 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.madar.crewly.core.common.ContentState
 import com.madar.crewly.core.common.DisplayUiState
 import com.madar.crewly.core.common.R
@@ -30,7 +28,6 @@ import com.madar.crewly.core.ui.molecules.EmptyStateView
 import com.madar.crewly.core.ui.molecules.ErrorView
 import com.madar.crewly.core.ui.molecules.UserCard
 import com.madar.crewly.core.ui.molecules.UserCardSkeleton
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,9 +35,8 @@ fun UsersScreen(
     uiState: DisplayUiState,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DisplayViewModel = koinViewModel()
+    viewModel: DisplayViewModel
 ) {
-    val users by viewModel.users.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
 
     Scaffold(
@@ -93,10 +89,10 @@ fun UsersScreen(
 
                 is ContentState.Success -> {
                     @Suppress("UNCHECKED_CAST")
-                    val userList = contentState.users as List<User>
+                    val userList = contentState.data as List<User>
                     PullToRefreshBox(
-                        isRefreshing = false,
-                        onRefresh = { viewModel.load() },
+                        isRefreshing = uiState.isRefreshing,
+                        onRefresh = { viewModel.refresh() },
                         state = pullToRefreshState,
                         modifier = Modifier.fillMaxSize()
                     ) {

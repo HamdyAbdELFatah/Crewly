@@ -1,5 +1,6 @@
-package com.madar.crewly.core.data
+package com.madar.crewly.core.domain
 
+import com.madar.crewly.core.data.User
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {

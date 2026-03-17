@@ -32,7 +32,6 @@ import com.madar.crewly.core.ui.atoms.AppTextField
 import com.madar.crewly.core.ui.atoms.AppTopBar
 import com.madar.crewly.core.ui.foundation.AppDimens
 import kotlinx.coroutines.flow.collectLatest
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun InputScreen(
@@ -40,7 +39,7 @@ fun InputScreen(
     onEvent: (UserFormEvent) -> Unit,
     onNavigate: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: InputViewModel = koinViewModel()
+    viewModel: InputViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
