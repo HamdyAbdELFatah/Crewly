@@ -1,17 +1,14 @@
 package com.madar.crewly.feature.display
 
-import androidx.lifecycle.viewModelScope
 import com.madar.crewly.core.common.BaseViewModel
 import com.madar.crewly.core.common.ContentState
 import com.madar.crewly.core.common.DispatcherProvider
 import com.madar.crewly.core.common.DisplayUiEvent
 import com.madar.crewly.core.common.DisplayUiState
 import com.madar.crewly.core.common.UiText
-import com.madar.crewly.core.data.User
 import com.madar.crewly.core.domain.UserRepository
 import com.madar.crewly.core.domain.GetAllUsersUseCase
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 
 class DisplayViewModel(
     private val getAllUsersUseCase: GetAllUsersUseCase,
@@ -20,14 +17,13 @@ class DisplayViewModel(
 ) : BaseViewModel<DisplayUiState, DisplayUiEvent>(dispatchers) {
 
     init {
-        load()
+        observeUsers()
     }
 
     override fun initialState() = DisplayUiState()
 
-    fun load() {
-        viewModelScope.launch(dispatchers.io) {
-            updateState { copy(contentState = ContentState.Loading) }
+    private fun observeUsers() {
+        launch {
             combine(
                 getAllUsersUseCase(),
                 userRepository.getUserCount()
@@ -50,7 +46,6 @@ class DisplayViewModel(
 
     fun refresh() {
         updateState { copy(isRefreshing = true) }
-        load()
     }
 
     override fun handleError(message: UiText) {

@@ -8,16 +8,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ExperimentalNavigation3Api
 import com.madar.crewly.core.common.AppRoute
 import com.madar.crewly.core.common.InputRoute
+import com.madar.crewly.core.common.UiText
 import com.madar.crewly.core.common.UsersRoute
 import com.madar.crewly.core.ui.foundation.AppTheme
+import com.madar.crewly.core.ui.foundation.ErrorBoundary
 import com.madar.crewly.feature.display.DisplayViewModel
 import com.madar.crewly.feature.display.UsersScreen
 import com.madar.crewly.feature.input.InputScreen
@@ -38,40 +43,50 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalNavigation3Api::class)
 @Composable
 fun MainScreen() {
-    val navBackStack = remember {
-        NavBackStack<AppRoute>().apply { add(InputRoute) }
-    }
+    var error by remember { mutableStateOf<UiText?>(null) }
 
-    NavDisplay(
-        backStack = navBackStack,
-        onBack = { navBackStack.removeLastOrNull() },
-        entryProvider = { key: AppRoute ->
-            when (key) {
-                is InputRoute -> NavEntry(key) {
-                    val vm = koinViewModel<InputViewModel>()
-                    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    if (error != null) {
+        ErrorBoundary(
+            message = error!!,
+            onRetry = { error = null }
+        )
+    } else {
+        val navBackStack = remember {
+            NavBackStack<AppRoute>().apply { add(InputRoute) }
+        }
 
-                    InputScreen(
-                        uiState = uiState,
-                        onEvent = vm::onEvent,
-                        onNavigate = { navBackStack.add(UsersRoute) },
-                        viewModel = vm
-                    )
-                }
+        NavDisplay(
+            backStack = navBackStack,
+            onBack = { navBackStack.removeLastOrNull() },
+            entryProvider = { key: AppRoute ->
+                when (key) {
+                    is InputRoute -> NavEntry(key) {
+                        val vm = koinViewModel<InputViewModel>()
+                        val uiState by vm.uiState.collectAsStateWithLifecycle()
 
-                is UsersRoute -> NavEntry(key) {
-                    val vm = koinViewModel<DisplayViewModel>()
-                    val uiState by vm.uiState.collectAsStateWithLifecycle()
+                        InputScreen(
+                            uiState = uiState,
+                            onEvent = vm::onEvent,
+                            onNavigate = { navBackStack.add(UsersRoute) },
+                            viewModel = vm
+                        )
+                    }
 
-                    UsersScreen(
-                        uiState = uiState,
-                        onBack = { navBackStack.removeLastOrNull() },
-                        viewModel = vm
-                    )
+                    is UsersRoute -> NavEntry(key) {
+                        val vm = koinViewModel<DisplayViewModel>()
+                        val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+                        UsersScreen(
+                            uiState = uiState,
+                            onBack = { navBackStack.removeLastOrNull() },
+                            viewModel = vm
+                        )
+                    }
                 }
             }
-        }
-    )
+        )
+    }
 }

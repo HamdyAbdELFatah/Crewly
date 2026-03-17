@@ -83,7 +83,7 @@ fun UsersScreen(
                 is ContentState.Error -> {
                     ErrorView(
                         message = contentState.message,
-                        onRetry = { viewModel.load() }
+                        onRetry = { viewModel.refresh() }
                     )
                 }
 
