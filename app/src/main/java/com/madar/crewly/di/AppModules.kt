@@ -1,17 +1,21 @@
 package com.madar.crewly.di
 
-import com.madar.crewly.core.common.DispatcherProvider
-import com.madar.crewly.core.common.Mapper
-import com.madar.crewly.core.data.AppDatabase
-import com.madar.crewly.core.data.User
-import com.madar.crewly.core.data.UserEntity
-import com.madar.crewly.core.data.UserRepositoryImpl
-import com.madar.crewly.core.data.UserEntityToUserMapper
-import com.madar.crewly.core.data.UserToUserEntityMapper
-import com.madar.crewly.core.data.createAppDatabase
-import com.madar.crewly.core.domain.GetAllUsersUseCase
-import com.madar.crewly.core.domain.SaveUserUseCase
-import com.madar.crewly.core.domain.UserRepository
+import com.madar.crewly.core.common.base.DispatcherProvider
+import com.madar.crewly.core.common.mapper.Mapper
+import com.madar.crewly.core.data.local.AppDatabase
+import com.madar.crewly.core.data.local.entity.UserEntity
+import com.madar.crewly.core.data.local.createAppDatabase
+import com.madar.crewly.core.data.repository.UserRepositoryImpl
+import com.madar.crewly.core.data.mapper.UserEntityToUserMapper
+import com.madar.crewly.core.data.mapper.UserToUserEntityMapper
+import com.madar.crewly.core.domain.model.User
+import com.madar.crewly.core.domain.repository.UserRepository
+import com.madar.crewly.core.domain.usecase.GetAllUsersUseCase
+import com.madar.crewly.core.domain.usecase.SaveUserUseCase
+import com.madar.crewly.core.domain.usecase.GetUserByIdUseCase
+import com.madar.crewly.core.domain.usecase.UpdateUserUseCase
+import com.madar.crewly.core.domain.usecase.DeleteUserUseCase
+import com.madar.crewly.core.domain.usecase.GetUserCountUseCase
 import com.madar.crewly.feature.display.DisplayViewModel
 import com.madar.crewly.feature.input.InputViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,12 +53,16 @@ val dataModule = module {
 val domainModule = module {
     factory { SaveUserUseCase(get()) }
     factory { GetAllUsersUseCase(get()) }
+    factory { GetUserByIdUseCase(get()) }
+    factory { UpdateUserUseCase(get()) }
+    factory { DeleteUserUseCase(get()) }
+    factory { GetUserCountUseCase(get()) }
 }
 
 val inputModule = module {
-    viewModel { InputViewModel(get(), get()) }
+    viewModel { InputViewModel(get(), get(), get(), get()) }
 }
 
 val displayModule = module {
-    viewModel { DisplayViewModel(get(), get(), get()) }
+    viewModel { DisplayViewModel(get(), get(), get(), get()) }
 }

@@ -19,7 +19,6 @@ android {
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(project(":core:common"))
-    implementation(project(":core:data"))
     
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.core)

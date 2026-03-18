@@ -1,6 +1,9 @@
 package com.madar.crewly.core.data
 
-import com.madar.crewly.core.common.Mapper
+import com.madar.crewly.core.common.mapper.Mapper
+import com.madar.crewly.core.data.local.entity.UserEntity
+import com.madar.crewly.core.data.mapper.UserEntityToUserMapper
+import com.madar.crewly.core.domain.model.User
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

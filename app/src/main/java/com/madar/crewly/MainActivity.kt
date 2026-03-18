@@ -6,7 +6,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,18 +47,32 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ExperimentalNavigation3Api
-import com.madar.crewly.core.common.AppRoute
-import com.madar.crewly.core.common.InputRoute
-import com.madar.crewly.core.common.UiText
-import com.madar.crewly.core.common.UsersRoute
+import com.madar.crewly.core.common.navigation.AppRoute
+import com.madar.crewly.core.common.navigation.InputRoute
+import com.madar.crewly.core.common.navigation.UsersRoute
+import com.madar.crewly.core.common.ui.UiText
 import com.madar.crewly.core.ui.foundation.AppTheme
 import com.madar.crewly.core.ui.foundation.ErrorBoundary
 import com.madar.crewly.feature.display.DisplayViewModel
-import com.madar.crewly.feature.display.UsersScreen
-import com.madar.crewly.feature.input.InputScreen
+import com.madar.crewly.feature.display.ui.UsersScreen
 import com.madar.crewly.feature.input.InputViewModel
+import com.madar.crewly.feature.input.ui.InputScreen
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+
+private object SplashConfig {
+    const val SPLASH_DELAY_MS = 2500L
+    const val SCALE_ANIM_DELAY_MS = 300L
+    const val SCALE_ANIM_DURATION_MS = 500
+    const val ALPHA_ANIM_DELAY_MS = 500L
+    const val ALPHA_ANIM_DURATION_MS = 500
+    const val TEXT_ALPHA_ANIM_DELAY_MS = 800L
+    const val TEXT_ALPHA_ANIM_DURATION_MS = 400
+    const val LOGO_SIZE_DP = 160
+    const val TITLE_FONT_SIZE = 36
+    const val TITLE_BOTTOM_PADDING_DP = 100
+    const val ANIMATION_PHASE_DURATION = 20000
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,17 +87,57 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    if (keepSplashScreen) {
-                        SplashScreenContent {
-                            keepSplashScreen = false
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        FluidBackground()
+                        
+                        if (keepSplashScreen) {
+                            SplashScreenContent {
+                                keepSplashScreen = false
+                            }
+                        } else {
+                            MainScreen()
                         }
-                    } else {
-                        MainScreen()
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FluidBackground() {
+    val transition = rememberInfiniteTransition(label = "mesh")
+    val rawPhase by transition.animateFloat(
+        initialValue = 0f, 
+        targetValue = 2f * Math.PI.toFloat(), 
+        animationSpec = infiniteRepeatable(tween(SplashConfig.ANIMATION_PHASE_DURATION, easing = LinearEasing)),
+        label = "phase"
+    )
+    
+    val color1 = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    val color2 = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+    
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val width = size.width
+        val height = size.height
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(color1, Color.Transparent),
+                center = Offset(width * (0.5f + 0.5f * kotlin.math.sin(rawPhase)), height * 0.2f),
+                radius = width * 1.2f
+            )
+        )
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(color2, Color.Transparent),
+                center = Offset(width * (0.5f + 0.5f * kotlin.math.cos(rawPhase)), height * 0.8f),
+                radius = width * 1.2f
+            )
+        )
     }
 }
 
@@ -86,40 +150,40 @@ private fun SplashScreenContent(
     val textAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        delay(300)
+        delay(SplashConfig.SCALE_ANIM_DELAY_MS)
         scale.animateTo(
             targetValue = 1f,
             animationSpec = tween(
-                durationMillis = 500,
+                durationMillis = SplashConfig.SCALE_ANIM_DURATION_MS,
                 easing = FastOutSlowInEasing
             )
         )
     }
 
     LaunchedEffect(Unit) {
-        delay(500)
+        delay(SplashConfig.ALPHA_ANIM_DELAY_MS)
         alpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(
-                durationMillis = 500,
+                durationMillis = SplashConfig.ALPHA_ANIM_DURATION_MS,
                 easing = FastOutSlowInEasing
             )
         )
     }
     
     LaunchedEffect(Unit) {
-        delay(800)
+        delay(SplashConfig.TEXT_ALPHA_ANIM_DELAY_MS)
         textAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(
-                durationMillis = 400,
+                durationMillis = SplashConfig.TEXT_ALPHA_ANIM_DURATION_MS,
                 easing = FastOutSlowInEasing
             )
         )
     }
 
     LaunchedEffect(Unit) {
-        delay(2500)
+        delay(SplashConfig.SPLASH_DELAY_MS)
         onTimeout()
     }
 
@@ -129,9 +193,9 @@ private fun SplashScreenContent(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.secondaryContainer
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                     )
                 )
             ),
@@ -144,27 +208,26 @@ private fun SplashScreenContent(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(id = com.madar.crewly.R.drawable.ic_launcher_foreground),
+                painter = painterResource(com.madar.crewly.core.ui.R.drawable.ic_app_logo),
                 contentDescription = "App Logo",
-                modifier = Modifier.size(120.dp),
-                tint = Color.White
+                modifier = Modifier.size(SplashConfig.LOGO_SIZE_DP.dp),
+                tint = Color.Unspecified
             )
         }
 
         Text(
-            text = "Crewly",
+            text = stringResource(R.string.app_name),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 100.dp)
+                .padding(bottom = SplashConfig.TITLE_BOTTOM_PADDING_DP.dp)
                 .alpha(textAlpha.value),
-            fontSize = 36.sp,
+            fontSize = SplashConfig.TITLE_FONT_SIZE.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
         )
     }
 }
 
-@OptIn(ExperimentalNavigation3Api::class)
 @Composable
 fun MainScreen() {
     var error by remember { mutableStateOf<UiText?>(null) }
@@ -176,7 +239,7 @@ fun MainScreen() {
         )
     } else {
         val navBackStack = remember {
-            NavBackStack<AppRoute>().apply { add(InputRoute) }
+            NavBackStack<AppRoute>().apply { add(InputRoute()) }
         }
 
         NavDisplay(
@@ -188,11 +251,24 @@ fun MainScreen() {
                         val vm = koinViewModel<InputViewModel>()
                         val uiState by vm.uiState.collectAsStateWithLifecycle()
 
+                        LaunchedEffect(key.userId) {
+                            vm.resetState()
+                            if (key.userId > 0) {
+                                vm.loadUser(key.userId)
+                            }
+                        }
+
                         InputScreen(
                             uiState = uiState,
                             onEvent = vm::onEvent,
                             onNavigate = { navBackStack.add(UsersRoute) },
-                            viewModel = vm
+                            onBack = { navBackStack.removeLastOrNull() },
+                            uiEvents = vm.uiEvent,
+                            onNavigateAndClear = {
+                                navBackStack.clear()
+                                navBackStack.add(InputRoute())
+                                navBackStack.add(UsersRoute)
+                            }
                         )
                     }
 
@@ -203,7 +279,14 @@ fun MainScreen() {
                         UsersScreen(
                             uiState = uiState,
                             onBack = { navBackStack.removeLastOrNull() },
-                            viewModel = vm
+                            onUserClick = { userId ->
+                                navBackStack.add(InputRoute(userId))
+                            },
+                            onUserDelete = { userId ->
+                                vm.deleteUser(userId)
+                            },
+                            onRefresh = vm::refresh,
+                            uiEvents = vm.uiEvent
                         )
                     }
                 }

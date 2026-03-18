@@ -19,12 +19,56 @@ A production-grade multi-module Android application for user management built wi
 | Module | Purpose |
 |--------|---------|
 | `:app` | Application entry point, Koin DI setup, Navigation 3 |
-| `:core:common` | BaseViewModel, UiState, UiEvent, Dispatchers, Validators |
+| `:core:common` | Base classes, Constants, Validators, Navigation routes |
 | `:core:data` | Room 3.0 database, DAOs, Repository implementation |
-| `:core:domain` | Use cases (SaveUser, GetAllUsers) |
+| `:core:domain` | Domain models, Repository interfaces, Use cases |
 | `:core:ui` | Design system (Foundation, Atoms, Molecules) |
-| `:feature:input` | User input screen + ViewModel |
-| `:feature:display` | Users list screen + ViewModel |
+| `:feature:input` | User input screen (Add/Edit) + ViewModel |
+| `:feature:display` | Users list screen + ViewModel with pull-to-refresh |
+
+### Package Structure
+
+```
+core/domain/
+  ├── model/          # User data class
+  ├── repository/     # UserRepository interface
+  └── usecase/        # SaveUser, GetAllUsers, GetUserById, UpdateUser, DeleteUser, GetUserCount
+
+core/common/
+  ├── base/           # BaseViewModel, UiState, UiEvent, DispatcherProvider
+  ├── constants/      # AppConstants
+  ├── mapper/         # Mapper interface
+  ├── navigation/     # AppRoute, InputRoute, UsersRoute
+  ├── ui/             # UiText
+  └── validation/     # InputValidator, ValidationResult, Field
+
+feature/input/
+  ├── ui/             # InputScreen composable
+  └── state/          # InputUiState, InputUiEvent, UserFormEvent, Gender
+
+feature/display/
+  ├── ui/             # UsersScreen composable
+  └── state/          # UsersUiState, UsersUiEvent, UsersContentState
+```
+
+## Features
+
+### Core Functionality
+- **Add User**: Name, Age, Job Title, Gender (Male/Female)
+- **Edit User**: Tap user card to edit existing user
+- **Delete User**: Swipe-to-delete with visual feedback
+- **User List**: Pull-to-refresh, animated entry effects
+
+### Design System
+- **Gold brand theme** with dynamic color disabled
+- **Glass morphism** cards with 3D touch effects
+- **Shimmer animations** on primary buttons
+- **Custom text fields** with glow effects on focus
+- **Smooth transitions** between screens
+
+### Navigation Flow
+- **Add Mode**: Add User → Navigate to List → Back to Add → Exit
+- **Edit Mode**: List → Tap User → Edit → Save → Clear backstack to List → Exit
 
 ## Key Technologies
 
@@ -32,7 +76,7 @@ A production-grade multi-module Android application for user management built wi
 
 #### Why BundledSQLiteDriver is Required
 
-Room 3.0 moved SQLite driver management out of the core library. Previously, Room bundled its own SQLite driver, but now you must explicitly include `androidx.sqlite:sqlite-bundled` and use `BundledSQLiteDriver()` when building your database:
+Room 3.0 moved SQLite driver management out of the core library. You must explicitly include `androidx.sqlite:sqlite-bundled`:
 
 ```kotlin
 Room.databaseBuilder<AppDatabase>(context, DB_NAME)
@@ -41,90 +85,53 @@ Room.databaseBuilder<AppDatabase>(context, DB_NAME)
     .build()
 ```
 
-This change provides:
-- Better control over SQLite driver versions
-- Improved dependency management
-- Support for custom SQLite implementations
-
-#### withWriteTransaction vs runInTransaction
-
-Room 3.0 removed `runInTransaction()` and replaced it with `withWriteTransaction()`:
-
-```kotlin
-// Room 3.0 (CORRECT)
-roomDatabase.withWriteTransaction { transaction ->
-    // perform writes within transaction
-}
-```
-
-The new API is:
-- Flow-based and suspend-friendly
-- Better integrated with coroutines
-- More type-safe
-
 ### Navigation 3
 
-#### Backstack vs NavController
-
-Navigation 3 (navigation-compose 1.0.1) uses a completely different paradigm from Navigation 2:
-
 ```kotlin
-// Navigation 3 (CORRECT) - using NavBackStack
-val backStack = rememberNavBackStack(InputRoute)
+// Navigation 3 using NavBackStack
+val navBackStack = remember {
+    NavBackStack<AppRoute>().apply { add(InputRoute()) }
+}
 
 NavDisplay(
-    backStack = backStack,
-    onBack = { backStack.removeLastOrNull() },
-    entryProvider = entryProvider {
-        entry<InputRoute> { /* screen content */ }
+    backStack = navBackStack,
+    onBack = { navBackStack.removeLastOrNull() },
+    entryProvider = { key: AppRoute ->
+        when (key) {
+            is InputRoute -> NavEntry(key) { /* InputScreen */ }
+            is UsersRoute -> NavEntry(key) { /* UsersScreen */ }
+        }
     }
 )
 ```
 
-Key differences from NavController:
-- No `NavHost` or `NavGraph`
+Key points:
 - Routes implement `NavKey` + `@Serializable`
 - Manual backstack management via `MutableList`
-- Entry decorators for Scene, SavedState, ViewModelStore
+- Special handling for edit mode to clear backstack
 
 ### BaseViewModel Contract
-
-The generic `BaseViewModel<S : UiState, E : UiEvent>` provides:
 
 ```kotlin
 abstract class BaseViewModel<S : UiState, E : UiEvent>(
     protected val dispatchers: DispatcherProvider
 ) : ViewModel() {
-    // Generic state flow with WhileSubscribed(5000)
     val uiState: StateFlow<S>
-    
-    // Loading state for UI feedback
-    val isLoading: StateFlow<Boolean>
-    
-    // One-time events channel
     val uiEvent: Flow<E>
     
-    // Helper functions
     protected fun updateState(reducer: S.() -> S)
     protected fun sendEvent(event: E)
     protected fun launch(block: suspend CoroutineScope.() -> Unit)
-    protected fun launchWithLoading(block: suspend CoroutineScope.() -> Unit)
 }
 ```
-
-Subclass benefits:
-- Zero boilerplate for state management
-- Consistent error handling pattern
-- Automatic loading state management
-- Built-in coroutine dispatching
 
 ## Setup
 
 ### Prerequisites
 
 - JDK 17+
-- Android SDK 35
-- Gradle 8.8+
+- Android SDK 36
+- Gradle 9.3+
 
 ### Build Commands
 
@@ -135,55 +142,50 @@ Subclass benefits:
 # Run tests
 ./gradlew test
 
-# Run lint
-./gradlew lint
-
-# Release build (requires signing config)
-./gradlew assembleRelease
+# Build with no daemon (solves file lock issues)
+./gradlew assembleDebug --no-daemon
 ```
 
-### Environment Variables
+## Project Status
 
-For release builds, configure in GitHub Secrets:
-- `KEYSTORE_BASE64`: Base64-encoded keystore
-- `KEYSTORE_PASSWORD`: Keystore password
-- `KEY_ALIAS`: Key alias
-- `KEY_PASSWORD`: Key password
+### Completed Refactoring
 
-## CI/CD
+- [x] Package organization (Clean Architecture layers)
+- [x] Coroutine leak fix in DisplayViewModel
+- [x] Clean Architecture violations removed (feature modules no longer depend on core:data)
+- [x] Dead code removed (launchWithLoading wrapper)
+- [x] Error banner added to InputScreen
+- [x] User not found notification added
+- [x] Paint objects cached for performance
+- [x] Hardcoded dimensions replaced with AppDimens tokens
+- [x] Unused parameters removed
+- [x] Dynamic color disabled (gold brand enforced)
+- [x] Splash screen uses app logo
+- [x] Navigation backstack fixed for edit mode
+- [x] Gender options reduced to Male/Female only
+- [x] Swipe-to-delete with visual feedback
 
-### Workflows
+### Test Coverage
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| CI | Push to main/develop, PR to main | Lint → Test → Build Debug |
-| CD | Push to main | Build Release APK |
+- [x] FakeUserRepository test double
+- [x] GetUserCountUseCase tests
+- [x] DisplayViewModel tests (initial state, empty, success, count)
+- [x] InputViewModel tests
+- [x] Use case tests (Save, GetAll, GetById, Update, Delete)
 
-## Dependencies (Verified Versions)
+## Dependencies
 
-All versions are defined in `gradle/libs.versions.toml`:
+All versions defined in `gradle/libs.versions.toml`:
 
 | Library | Version |
 |---------|---------|
 | Kotlin | 2.1.0 |
 | AGP | 8.8.0 |
-| Room 3.0 | 3.0.0-alpha01 |
+| Room | 3.0.0-alpha01 |
 | Navigation 3 | 1.0.1 |
 | Koin | 4.0.2 |
 | Compose BOM | 2025.02.00 |
 | Lifecycle | 2.9.0 |
-
-## Time Estimate
-
-- Initial setup: ~2 hours
-- Core common module: ~3 hours
-- Data layer (Room 3.0): ~4 hours
-- Domain layer: ~2 hours
-- UI design system: ~4 hours
-- Feature screens: ~4 hours
-- CI/CD: ~1 hour
-
-**Total: ~20 hours**
 
 ## License
 

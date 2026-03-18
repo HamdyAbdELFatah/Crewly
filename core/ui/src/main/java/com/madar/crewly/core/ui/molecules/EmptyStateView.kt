@@ -14,7 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.madar.crewly.core.ui.R
+import com.madar.crewly.core.ui.foundation.AppDimens
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun EmptyStateView(
@@ -28,14 +30,14 @@ fun EmptyStateView(
         Icon(
             imageVector = Icons.Default.PersonOff,
             contentDescription = null,
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(AppDimens.iconSizeLarge),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimens.spacingM))
 
         Text(
-            text = "No users found",
+            text = stringResource(R.string.no_users),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

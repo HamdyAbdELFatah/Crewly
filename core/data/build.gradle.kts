@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(project(":core:common"))
+    implementation(project(":core:domain"))
     
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.core)

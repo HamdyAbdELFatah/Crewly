@@ -15,8 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.madar.crewly.core.common.R
-import com.madar.crewly.core.common.UiText
+import com.madar.crewly.core.common.R as CommonR
+import com.madar.crewly.core.common.ui.UiText
+import com.madar.crewly.core.ui.R as UiR
 import com.madar.crewly.core.ui.atoms.AppButton
 
 @Composable
@@ -25,6 +26,7 @@ fun ErrorBoundary(
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -35,7 +37,7 @@ fun ErrorBoundary(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.error_title),
+                text = stringResource(UiR.string.error_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -43,7 +45,7 @@ fun ErrorBoundary(
             Spacer(modifier = Modifier.height(AppDimens.spacingM))
 
             Text(
-                text = message.asString(),
+                text = message.asString(context),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -53,9 +55,9 @@ fun ErrorBoundary(
                 Spacer(modifier = Modifier.height(AppDimens.spacingL))
 
                 AppButton(
-                    text = UiText.StringResource(R.string.retry_button),
+                    text = UiText.StringResource(UiR.string.retry_button),
                     onClick = onRetry,
-                    modifier = Modifier.padding(horizontal = AppDimens.spacingXL)
+                    modifier = Modifier.padding(horizontal = AppDimens.spacingL)
                 )
             }
         }

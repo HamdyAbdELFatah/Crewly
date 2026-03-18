@@ -36,7 +36,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.koin.androidx.compose)
     implementation(project(":core:common"))
-    implementation(project(":core:data"))
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
     

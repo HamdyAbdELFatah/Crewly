@@ -1,6 +1,12 @@
 package com.madar.crewly.core.data
 
-import com.madar.crewly.core.common.Mapper
+import com.madar.crewly.core.common.mapper.Mapper
+import com.madar.crewly.core.data.local.entity.UserEntity
+import com.madar.crewly.core.data.local.dao.UserDao
+import com.madar.crewly.core.data.mapper.UserEntityToUserMapper
+import com.madar.crewly.core.data.mapper.UserToUserEntityMapper
+import com.madar.crewly.core.data.repository.UserRepositoryImpl
+import com.madar.crewly.core.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
@@ -13,6 +19,7 @@ import org.junit.Test
 class UserRepositoryImplTest {
 
     private lateinit var repository: UserRepositoryImpl
+    private var nextId = 1L
 
     @Before
     fun setup() {
@@ -20,8 +27,20 @@ class UserRepositoryImplTest {
             private val users = MutableStateFlow<List<UserEntity>>(emptyList())
             override fun getAllUsers() = users
             override fun getUserCount() = MutableStateFlow(users.value.size)
-            override suspend fun insert(entity: UserEntity) {
-                users.value = users.value + entity
+            override fun getUserById(userId: Long) = flowOf(users.value.find { it.id == userId })
+            override suspend fun insert(entity: UserEntity): Long {
+                val newEntity = entity.copy(id = nextId++)
+                users.value = users.value + newEntity
+                return newEntity.id
+            }
+            override suspend fun update(entity: UserEntity) {
+                users.value = users.value.map { if (it.id == entity.id) entity else it }
+            }
+            override suspend fun delete(entity: UserEntity) {
+                users.value = users.value.filter { it.id != entity.id }
+            }
+            override suspend fun deleteById(userId: Long) {
+                users.value = users.value.filter { it.id != userId }
             }
         }
         

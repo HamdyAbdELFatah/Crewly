@@ -1,9 +1,11 @@
 package com.madar.crewly.core.domain
 
-import com.madar.crewly.core.data.User
-import com.madar.crewly.core.data.UserRepository
+import com.madar.crewly.core.domain.model.User
+import com.madar.crewly.core.domain.repository.UserRepository
+import com.madar.crewly.core.domain.usecase.GetAllUsersUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,6 +24,9 @@ class GetAllUsersUseCaseTest {
             override suspend fun saveUser(user: User): Result<Long> = Result.success(0L)
             override fun getAllUsers() = usersFlow
             override fun getUserCount() = MutableStateFlow(0)
+            override fun getUserById(userId: Long) = flowOf<User?>(null)
+            override suspend fun updateUser(user: User): Result<Unit> = Result.success(Unit)
+            override suspend fun deleteUser(userId: Long): Result<Unit> = Result.success(Unit)
         }
         useCase = GetAllUsersUseCase(userRepository)
     }

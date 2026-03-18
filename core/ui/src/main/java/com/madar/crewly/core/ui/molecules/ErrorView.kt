@@ -14,10 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.madar.crewly.core.common.UiText
+import com.madar.crewly.core.common.R
+import com.madar.crewly.core.common.ui.UiText
 import com.madar.crewly.core.ui.atoms.AppButton
 import com.madar.crewly.core.ui.atoms.ButtonType
+import com.madar.crewly.core.ui.foundation.AppDimens
 
 @Composable
 fun ErrorView(
@@ -33,11 +34,11 @@ fun ErrorView(
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = null,
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(AppDimens.iconSizeLarge),
             tint = MaterialTheme.colorScheme.error
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(AppDimens.spacingM))
 
         Text(
             text = message.asString(androidx.compose.ui.platform.LocalContext.current),
@@ -45,10 +46,10 @@ fun ErrorView(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(AppDimens.spacingL))
 
         AppButton(
-            text = UiText.StringResource(com.madar.crewly.core.common.R.string.try_again),
+            text = UiText.StringResource(R.string.try_again),
             onClick = onRetry,
             type = ButtonType.Secondary
         )

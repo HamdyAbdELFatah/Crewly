@@ -1,8 +1,10 @@
 package com.madar.crewly.core.domain
 
-import com.madar.crewly.core.data.User
-import com.madar.crewly.core.data.UserRepository
+import com.madar.crewly.core.domain.model.User
+import com.madar.crewly.core.domain.repository.UserRepository
+import com.madar.crewly.core.domain.usecase.SaveUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,6 +22,9 @@ class SaveUserUseCaseTest {
             override suspend fun saveUser(user: User): Result<Long> = Result.success(1L)
             override fun getAllUsers() = MutableStateFlow<List<User>>(emptyList())
             override fun getUserCount() = MutableStateFlow(0)
+            override fun getUserById(userId: Long) = flowOf<User?>(null)
+            override suspend fun updateUser(user: User): Result<Unit> = Result.success(Unit)
+            override suspend fun deleteUser(userId: Long): Result<Unit> = Result.success(Unit)
         }
         useCase = SaveUserUseCase(userRepository)
     }
@@ -46,6 +51,9 @@ class SaveUserUseCaseTest {
             override suspend fun saveUser(user: User): Result<Long> = Result.failure(RuntimeException("Error"))
             override fun getAllUsers() = MutableStateFlow<List<User>>(emptyList())
             override fun getUserCount() = MutableStateFlow(0)
+            override fun getUserById(userId: Long) = flowOf<User?>(null)
+            override suspend fun updateUser(user: User): Result<Unit> = Result.success(Unit)
+            override suspend fun deleteUser(userId: Long): Result<Unit> = Result.success(Unit)
         }
         useCase = SaveUserUseCase(userRepository)
         
