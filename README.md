@@ -164,33 +164,6 @@ abstract class BaseViewModel<S : UiState, E : UiEvent>(
 ./gradlew assembleDebug --no-daemon
 ```
 
-## Project Status
-
-### Completed Refactoring
-
-- [x] Package organization (Clean Architecture layers)
-- [x] Coroutine leak fix in DisplayViewModel
-- [x] Clean Architecture violations removed (feature modules no longer depend on core:data)
-- [x] Dead code removed (launchWithLoading wrapper)
-- [x] Error banner added to InputScreen
-- [x] User not found notification added
-- [x] Paint objects cached for performance
-- [x] Hardcoded dimensions replaced with AppDimens tokens
-- [x] Unused parameters removed
-- [x] Dynamic color disabled (gold brand enforced)
-- [x] Splash screen uses app logo
-- [x] Navigation backstack fixed for edit mode
-- [x] Gender options reduced to Male/Female only
-- [x] Swipe-to-delete with visual feedback
-
-### Test Coverage
-
-- [x] FakeUserRepository test double
-- [x] GetUserCountUseCase tests
-- [x] DisplayViewModel tests (initial state, empty, success, count)
-- [x] InputViewModel tests
-- [x] Use case tests (Save, GetAll, GetById, Update, Delete)
-
 ## Dependencies
 
 All versions defined in `gradle/libs.versions.toml`:
