@@ -3,19 +3,40 @@ name: CD
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release Type'
+        required: true
+        default: 'beta'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+env:
+  JAVA_VERSION: '17'
 
 jobs:
+  # ==================== BUILD RELEASE ====================
   build-release:
+    name: Build Release APK
     runs-on: ubuntu-latest
+    outputs:
+      apk_path: ${{ steps.build.outputs.apk_path }}
+      version_name: ${{ steps.build.outputs.version_name }}
+      version_code: ${{ steps.build.outputs.version_code }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -23,24 +44,166 @@ jobs:
           cache-read-only: true
 
       - name: Decode keystore
+        if: env.RELEASE_KEYSTORE_BASE64 != ''
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+          echo "${{ env.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
         shell: bash
 
-      - name: Assemble release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Build release APK
+        id: build
         run: |
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=app/release.keystore \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+          if [ -f app/release.keystore ]; then
+            ./gradlew assembleRelease --no-daemon \
+              -Pandroid.injected.signing.store.file=app/release.keystore \
+              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+              -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+            echo "apk_path=app/build/outputs/apk/release/app-release.apk" >> $GITHUB_OUTPUT
+          else
+            ./gradlew assembleRelease --no-daemon
+            echo "apk_path=app/build/outputs/apk/release/app-release.apk" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract version info
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.0.0")
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts || echo "1")
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
 
       - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
+          name: release-apk-v${{ steps.build.outputs.version_name }}
           path: app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Upload mapping files
+        if: env.RELEASE_KEYSTORE_BASE64 != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-mapping-v${{ steps.build.outputs.version_name }}
+          path: |
+            app/build/outputs/mapping/**/*.txt
+            app/build/outputs/mapping/**/*.xml
+
+  # ==================== FIREBASE APP DISTRIBUTION ====================
+  firebase-distribute:
+    name: Firebase App Distribution
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: secrets.FIREBASE_TOKEN != ''
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk-v${{ needs.build-release.outputs.version_name }}
+          path: app/build/outputs/apk/release/
+
+      - name: Get Firebase Token
+        run: |
+          # Check if FIREBASE_TOKEN is set
+          if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
+            echo "FIREBASE_TOKEN not set, skipping Firebase distribution"
+            exit 0
+          fi
+
+      - name: Setup Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Distribute to Firebase
+        run: |
+          firebase appdistribution:distribute \
+            app/build/outputs/apk/release/*.apk \
+            --app ${{ secrets.FIREBASE_APP_ID }} \
+            --token ${{ secrets.FIREBASE_TOKEN }} \
+            --release-notes "Release v${{ needs.build-release.outputs.version_name }}" \
+            --group ${{ github.event.inputs.release_type || 'beta' }}
+
+  # ==================== GOOGLE PLAY (INTERNAL) ====================
+  google-play-internal:
+    name: Google Play Internal
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: secrets.GOOGLE_PLAY_JSON != ''
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk-v${{ needs.build-release.outputs.version_name }}
+          path: app/build/outputs/apk/release/
+
+      - name: Setup Google Play Publishing
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_JSON }}
+          packageName: com.madar.crewly
+          releaseFiles: app/build/outputs/apk/release/*.apk
+          track: ${{ github.event.inputs.release_type || 'internal' }}
+          inAppUpdatePriority: 2
+          userFraction: 0.1
+          whatsNewDirectory: |
+
+  # ==================== CREATE GITHUB RELEASE ====================
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk-v${{ needs.build-release.outputs.version_name }}
+          path: app/build/outputs/apk/release/
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          CHANGELOG=$(cat CHANGELOG.md 2>/dev/null | head -50 || echo "See CHANGELOG.md for details")
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.build-release.outputs.version_name }}
+          name: Release v${{ needs.build-release.outputs.version_name }}
+          body: |
+            ## Downloads
+            
+            📥 **[Download APK](app/build/outputs/apk/release/app-release.apk)**
+            
+            ## Changes
+            
+            ${{ steps.release-notes.outputs.changelog }}
+          files: app/build/outputs/apk/release/*.apk
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==================== NOTIFICATION ====================
+  notify-success:
+    name: Notify Success
+    runs-on: ubuntu-latest
+    needs: [build-release, firebase-distribute, google-play-internal, github-release]
+    if: always()
+    steps:
+      - name: Success Summary
+        if: needs.build-release.result == 'success'
+        run: |
+          echo "✅ Build completed successfully!"
+          echo "📦 APK: app/build/outputs/apk/release/"
+          echo "🏷️ Version: ${{ needs.build-release.outputs.version_name }}"
+          echo "🔢 Build: ${{ needs.build-release.outputs.version_code }}"
