@@ -10,12 +10,9 @@ A production-grade multi-module Android application for user management built wi
 > Click the thumbnail to watch the app demo on YouTube
 
 ### Download APK
-📥 **[Download Debug APK](app/build/outputs/apk/debug/app-debug.apk)**
+📥 **[Download Crewly Debug APK](YOUR_GOOGLE_DRIVE_LINK_HERE)**
 
-Install on your Android device:
-```bash
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
+Install on your Android device via ADB or directly download and install on your phone.
 
 ## Architecture
 
