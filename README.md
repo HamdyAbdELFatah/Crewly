@@ -5,14 +5,10 @@ A production-grade multi-module Android application for user management built wi
 ## Demo
 
 ### Video Demo
-[![Crewly App Demo](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
-
-> Click the thumbnail to watch the app demo on YouTube
+🎬 **[Watch App Demo on Google Drive](YOUR_VIDEO_DRIVE_LINK_HERE)**
 
 ### Download APK
-📥 **[Download Crewly Debug APK](YOUR_GOOGLE_DRIVE_LINK_HERE)**
-
-Install on your Android device via ADB or directly download and install on your phone.
+📥 **[Download Crewly Debug APK](YOUR_APK_DRIVE_LINK_HERE)**
 
 ## Architecture
 
