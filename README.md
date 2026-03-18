@@ -8,7 +8,7 @@ A production-grade multi-module Android application for user management built wi
 🎬 **[Watch App Demo on Google Drive](https://drive.google.com/file/d/1I_6jyHnRwp_xz7s00e4aawWhczDqrbAV/view?usp=sharing)**
 
 ### Download APK
-📥 **[Download Crewly Debug APK](YOUR_APK_DRIVE_LINK_HERE)**
+📥 **[Download Crewly Debug APK](https://drive.google.com/file/d/1kBHdZf1FuatsdVKdk8Dyy__J4i0JqTFY/view?usp=sharing)**
 
 ## Architecture
 
