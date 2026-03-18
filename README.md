@@ -2,6 +2,21 @@
 
 A production-grade multi-module Android application for user management built with modern Android development practices.
 
+## Demo
+
+### Video Demo
+[![Crewly App Demo](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+
+> Click the thumbnail to watch the app demo on YouTube
+
+### Download APK
+📥 **[Download Debug APK](app/build/outputs/apk/debug/app-debug.apk)**
+
+Install on your Android device:
+```bash
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## Architecture
 
 ### Module Graph
@@ -52,6 +67,16 @@ feature/display/
 ```
 
 ## Features
+
+### App Preview
+
+| Splash Screen | Add User | User List |
+|:---:|:---:|:---:|
+| ![Splash](docs/screenshots/splash.png) | ![Add](docs/screenshots/add_user.png) | ![List](docs/screenshots/user_list.png) |
+
+| Edit User | Swipe to Delete |
+|:---:|:---:|
+| ![Edit](docs/screenshots/edit_user.png) | ![Delete](docs/screenshots/swipe_delete.png) |
 
 ### Core Functionality
 - **Add User**: Name, Age, Job Title, Gender (Male/Female)
